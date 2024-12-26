@@ -1,8 +1,9 @@
 package main
 
 import (
-	"mimir-scrapper/internal/handlers"
 	"net/http"
+
+	"mimir-scrapper/internal/handlers"
 )
 
 func main() {
