@@ -1,5 +1,7 @@
 # mimir-scrapper
 
+https://www.youtube.com/watch?v=wUSgA8WEy4Q
+https://github.com/seversky/gachifinder/blob/master/scrape/scrape.go
 
 mimir-scrapper/
 ├── cmd/                     # Hlavní vstupní body aplikace

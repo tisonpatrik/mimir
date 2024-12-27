@@ -6,19 +6,35 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-func FetchPage(url string) (string, error) {
+func FetchPage(url string) ([]string, error) {
 	c := colly.NewCollector()
 
-	// Find and visit all links
-	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-		e.Request.Visit(e.Attr("href"))
+	var documents []string
+
+	// Callback for finding "Originál" links
+	c.OnHTML("a[title='Otevře originální dokument ']", func(e *colly.HTMLElement) {
+		// Build the full URL (assuming relative links)
+		link := e.Request.AbsoluteURL(e.Attr("href"))
+		fmt.Println("Found link:", link)
+
+		// Visit and read the linked page
+		c.Visit(link)
 	})
 
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
+	// Callback for visiting each "originál" link and saving its content
+	c.OnResponse(func(r *colly.Response) {
+		if r.Request.URL.String() != url { // Ensure we don't add the main URL content
+			content := string(r.Body)
+			fmt.Println("Read content from:", r.Request.URL)
+			documents = append(documents, content) // Save the content
+		}
 	})
 
-	c.Visit(url)
+	// Start scraping only the provided URL for links, no direct content fetch
+	err := c.Visit(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to visit main page: %w", err)
+	}
 
-	return string(url), nil
+	return documents, nil
 }
