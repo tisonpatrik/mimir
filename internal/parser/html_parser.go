@@ -3,6 +3,8 @@ package parser
 import (
 	"strings"
 
+	"mimir-scrapper/pkg/utils"
+
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/text/encoding/charmap"
 )
@@ -34,22 +36,25 @@ func ParseHTMLDocument(html string) (*Transcript, error) {
 		speaker := speakerLink.Text()
 		speaker = strings.TrimSpace(speaker)
 
-		// Extract speaker link
+		// Extract and decode speaker link
 		speakerHref, _ := speakerLink.Attr("href")
+		speakerHref = utils.DecodeURL(speakerHref)
 
 		// Find speech text
 		text := s.Find("p").Text()
 		text = strings.TrimSpace(text)
 
-		// Extract events
+		// Extract events (exclude the speaker link)
 		var events []Event
 		s.Find("a[href]").Each(func(i int, link *goquery.Selection) {
 			href, exists := link.Attr("href")
-			if exists && !strings.Contains(href, "webtv/archiv") { // Ignore audio/video links
-				description := link.Text()
+			description := strings.TrimSpace(link.Text())
+
+			// Add only non-speaker links to events
+			if exists && !strings.EqualFold(href, speakerHref) && !strings.Contains(href, "webtv/archiv") {
 				events = append(events, Event{
-					Description: strings.TrimSpace(description),
-					Link:        href,
+					Description: description,
+					Link:        utils.DecodeURL(href),
 				})
 			}
 		})
