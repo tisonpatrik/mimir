@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"sync"
 
 	"mimir-scrapper/internal/fetcher"
 	"mimir-scrapper/internal/parser"
@@ -33,23 +34,40 @@ func ScrapeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Process each document
-	var parsedDocuments []interface{}
-	for i, doc := range documents {
-		transcript, err := parser.ParseHTMLDocument(doc)
-		if err != nil {
-			log.Printf("Error parsing document %d: %v", i, err)
-			continue // Skip this document and proceed to the next
-		}
+	results := make(chan Result, len(documents))
+	var wg sync.WaitGroup
 
-		// Save the parsed transcript as a JSON file
-		filename := filepath.Join(outputDir, fmt.Sprintf("document_%d.json", i+1))
-		if err := utils.SaveToFile(filename, transcript); err != nil {
-			log.Printf("Error saving document %d: %v", i, err)
+	for i, doc := range documents {
+		wg.Add(1)
+		go func(index int, content string) {
+			defer wg.Done()
+			transcript, err := parser.ParseHTMLDocument(content)
+			results <- Result{Index: index, Transcript: transcript, Error: err}
+		}(i, doc)
+	}
+
+	// Close results channel once all goroutines finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Collect results and save parsed transcripts
+	var parsedDocuments []interface{}
+	for result := range results {
+		if result.Error != nil {
+			log.Printf("Error parsing document %d: %v", result.Index, result.Error)
 			continue
 		}
 
-		parsedDocuments = append(parsedDocuments, transcript)
+		// Save the parsed transcript as a JSON file
+		filename := filepath.Join(outputDir, fmt.Sprintf("document_%d.json", result.Index+1))
+		if err := utils.SaveToFile(filename, result.Transcript); err != nil {
+			log.Printf("Error saving document %d: %v", result.Index, err)
+			continue
+		}
+
+		parsedDocuments = append(parsedDocuments, result.Transcript)
 	}
 
 	// Respond with the number of successfully processed documents
