@@ -7,23 +7,6 @@ import (
 	"golang.org/x/text/encoding/charmap"
 )
 
-type Transcript struct {
-	Title   string
-	Entries []Entry
-}
-
-type Entry struct {
-	Speaker     string
-	SpeakerLink string
-	Text        string
-	Events      []Event
-}
-
-type Event struct {
-	Description string
-	Link        string
-}
-
 func ParseHTMLDocument(html string) (*Transcript, error) {
 	// Decode HTML from Windows-1250 to UTF-8
 	decoder := charmap.Windows1250.NewDecoder()
