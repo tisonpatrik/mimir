@@ -10,9 +10,11 @@ import (
 	"mimir-scrapper/src/internal/fetcher"
 	"mimir-scrapper/src/internal/parser"
 	"mimir-scrapper/src/pkg/utils"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func ScrapeHandler(w http.ResponseWriter, r *http.Request) {
+func ScrapeHandler(w http.ResponseWriter, r *http.Request, conn *pgxpool.Pool) {
 	const (
 		url       = "https://www.senat.cz/xqw/xervlet/pssenat/finddoc?typdok=steno"
 		outputDir = "data/raw_data" // Directory for storing documents
