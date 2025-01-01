@@ -15,7 +15,6 @@ func FetchPage(url string) ([]string, error) {
 	c.OnHTML("a[title='Otevře originální dokument ']", func(e *colly.HTMLElement) {
 		// Build the full URL (assuming relative links)
 		link := e.Request.AbsoluteURL(e.Attr("href"))
-		fmt.Println("Found link:", link)
 
 		// Visit and read the linked page
 		c.Visit(link)
@@ -25,7 +24,6 @@ func FetchPage(url string) ([]string, error) {
 	c.OnResponse(func(r *colly.Response) {
 		if r.Request.URL.String() != url { // Ensure we don't add the main URL content
 			content := string(r.Body)
-			fmt.Println("Read content from:", r.Request.URL)
 			documents = append(documents, content) // Save the content
 		}
 	})
