@@ -1,6 +1,6 @@
 # Change these variables as necessary.
-main_package_path = ./cmd/scrapper
-binary_name = scrapper
+main_package_path = ./src/cmd
+binary_name = mimir
 
 # ==================================================================================== #
 # HELPERS

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"mimir-scrapper/internal/fetcher"
-	"mimir-scrapper/internal/parser"
-	"mimir-scrapper/pkg/utils"
+	"mimir-scrapper/src/internal/fetcher"
+	"mimir-scrapper/src/internal/parser"
+	"mimir-scrapper/src/pkg/utils"
 )
 
 func ScrapeHandler(w http.ResponseWriter, r *http.Request) {

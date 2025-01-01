@@ -3,7 +3,7 @@ package parser
 import (
 	"strings"
 
-	"mimir-scrapper/pkg/utils"
+	"mimir-scrapper/src/pkg/utils"
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/text/encoding/charmap"

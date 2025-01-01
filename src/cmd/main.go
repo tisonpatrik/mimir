@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"mimir-scrapper/internal/handlers"
+	"mimir-scrapper/src/internal/handlers"
 )
 
 func main() {
