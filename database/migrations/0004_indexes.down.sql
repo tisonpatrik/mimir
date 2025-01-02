@@ -1,0 +1,5 @@
+BEGIN;
+
+DROP INDEX IF EXISTS idx_speaker_id;
+
+COMMIT;

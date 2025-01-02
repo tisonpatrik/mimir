@@ -1,5 +1,13 @@
+import 'database/database.just'
+
 cheers:
     @echo "Na zdraví! 🍺🍺🍺🍺🍺"
+
+drop:
+    @just drop_database
+
+migrate:
+    @just migrate_up
 
 dev:
     @docker compose -f compose.yml up --build

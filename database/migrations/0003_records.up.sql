@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE records (
     id SERIAL PRIMARY KEY,
     session_id INT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
@@ -12,3 +14,5 @@ CREATE TABLE events (
     link TEXT,
     record_id INT REFERENCES records(id) ON DELETE CASCADE
 );
+
+COMMIT;

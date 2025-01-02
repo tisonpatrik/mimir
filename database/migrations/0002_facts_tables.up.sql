@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE institution (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL
@@ -19,3 +21,5 @@ CREATE TABLE persons (
     id SERIAL PRIMARY KEY,
     full_name TEXT NOT NULL
 );
+
+COMMIT;
