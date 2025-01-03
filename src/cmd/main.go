@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"mimir-scrapper/src/internal/db"
-	"mimir-scrapper/src/internal/handlers"
+	"mimir-scrapper/src/internal/scraper"
+	"mimir-scrapper/src/pkg/db"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -24,7 +24,7 @@ func main() {
 	defer pool.Close()
 
 	http.HandleFunc("/scrape", func(w http.ResponseWriter, r *http.Request) {
-		handlers.ScrapeHandler(w, r, pool)
+		scraper.ScrapeHandler(w, r, pool)
 	})
 
 	fmt.Println("Server is running on port 8080...")

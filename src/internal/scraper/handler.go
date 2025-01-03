@@ -1,15 +1,14 @@
-package handlers
+package scraper
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"mimir-scrapper/src/internal/scraper/fetcher"
+	"mimir-scrapper/src/internal/scraper/parser"
+	"mimir-scrapper/src/pkg/utils"
 	"net/http"
 	"path/filepath"
-
-	"mimir-scrapper/src/internal/fetcher"
-	"mimir-scrapper/src/internal/parser"
-	"mimir-scrapper/src/pkg/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

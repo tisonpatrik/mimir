@@ -1,6 +1,6 @@
-package handlers
+package scraper
 
-import "mimir-scrapper/src/internal/parser"
+import "mimir-scrapper/src/internal/scraper/parser"
 
 type Result struct {
 	Index      int
