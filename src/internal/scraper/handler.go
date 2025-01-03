@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"log"
 	"mimir-scrapper/src/internal/scraper/fetcher"
-	"mimir-scrapper/src/internal/scraper/parser"
 	"mimir-scrapper/src/pkg/repository"
+	"mimir-scrapper/src/pkg/services"
 	"mimir-scrapper/src/pkg/utils"
 	"net/http"
-	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,7 +26,7 @@ func ScrapeHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, 
 		return
 	}
 
-	// Fetch HTML documents
+	// Fetch structured documents
 	documents, err := fetcher.FetchPage(url)
 	if err != nil {
 		log.Println("Error fetching documents:", err)
@@ -49,7 +47,7 @@ func ScrapeHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, 
 	json.NewEncoder(w).Encode(map[string]int{"processed_documents": len(parsedDocuments)})
 }
 
-func processAndSaveDocuments(ctx context.Context, pool *pgxpool.Pool, documents []string) ([]interface{}, error) {
+func processAndSaveDocuments(ctx context.Context, pool *pgxpool.Pool, documents []fetcher.Document) ([]interface{}, error) {
 	institutionName := "Senát"
 	occasionName := "meeting"
 	var parsedDocuments []interface{}
@@ -62,62 +60,20 @@ func processAndSaveDocuments(ctx context.Context, pool *pgxpool.Pool, documents 
 	}
 	defer tx.Rollback(ctx)
 
-	repo := repository.New(tx)
-
-	// Find or create institution
-	institution, err := repo.FindInstitutionByName(ctx, institutionName)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			log.Printf("Institution '%s' not found, creating it.", institutionName)
-			institution, err = repo.InsertInstitution(ctx, institutionName)
-			if err != nil {
-				log.Printf("Error creating institution: %v", err)
-				return nil, err
-			}
-		} else {
-			log.Printf("Error finding institution: %v", err)
-			return nil, err
-		}
-	}
-
-	// Find or create occasion
-	occasion, err := repo.FindOccasionByName(ctx, occasionName)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			log.Printf("Occasion '%s' not found, creating it.", occasionName)
-			occasion, err = repo.InsertOccasion(ctx, occasionName)
-			if err != nil {
-				log.Printf("Error creating occasion: %v", err)
-				return nil, err
-			}
-		} else {
-			log.Printf("Error finding occasion: %v", err)
-			return nil, err
-		}
-	}
-
-	// Insert session
-	session, err := repo.InsertSession(ctx, repository.InsertSessionParams{
-		InstitutionID: institution.ID,
-		OccasionID:    occasion.ID,
-		DateTime:      time.Now(),
-	})
-	if err != nil {
-		log.Printf("Error creating session: %v", err)
-		return nil, err
-	}
-	log.Printf("Session created with ID: %s", session.ID.String())
+	// Initialize sqlc Queries and SessionService
+	queries := repository.New(tx)
+	sessionService := services.NewSessionService(queries)
 
 	// Process documents
-	for index, content := range documents {
-		// Parse the HTML document
-		transcript, err := parser.ParseHTMLDocument(content)
+	for _, doc := range documents {
+		// Get or create session
+		session, err := sessionService.GetOrCreateSession(ctx, institutionName, occasionName, doc.Date)
 		if err != nil {
-			log.Printf("Error parsing document %d: %v", index, err)
-			continue
+			log.Printf("Error creating session: %v", err)
+			return nil, err
 		}
+		log.Printf("Session created with ID: %s", session.ID.String())
 
-		parsedDocuments = append(parsedDocuments, transcript)
 	}
 
 	// Commit transaction
