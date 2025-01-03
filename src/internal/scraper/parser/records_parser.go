@@ -4,11 +4,10 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/google/uuid"
 )
 
 // ParseRecords parses and returns records and their associated events from the given document.
-func ParseRecords(htmlContent string, sessionID uuid.UUID) ([]Record, error) {
+func ParseRecords(htmlContent string) ([]Record, error) {
 	records := []Record{}
 
 	parsedDocument, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
@@ -33,7 +32,6 @@ func ParseRecords(htmlContent string, sessionID uuid.UUID) ([]Record, error) {
 
 		if speakerName != "" && content != "" {
 			record := Record{
-				SessionID:      sessionID,
 				SpeakerName:    speakerName,
 				Content:        content,
 				Events:         extractEvents(item, speakerName),

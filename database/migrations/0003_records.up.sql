@@ -11,8 +11,8 @@ CREATE TABLE record (
 
 CREATE TABLE event (
     id UUID PRIMARY KEY,
-    link TEXT,
-    record_id UUID REFERENCES record(id) ON DELETE CASCADE
+    link TEXT NOT NULL,
+    record_id UUID NOT NULL REFERENCES record(id) ON DELETE CASCADE
 );
 
 COMMIT;

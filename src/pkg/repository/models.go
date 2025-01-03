@@ -8,13 +8,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Event struct {
-	ID       uuid.UUID   `json:"id"`
-	Link     pgtype.Text `json:"link"`
-	RecordID pgtype.UUID `json:"record_id"`
+	ID       uuid.UUID `json:"id"`
+	Link     string    `json:"link"`
+	RecordID uuid.UUID `json:"record_id"`
 }
 
 type Institution struct {

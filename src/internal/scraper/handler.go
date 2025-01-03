@@ -53,9 +53,10 @@ func processAndSaveDocuments(ctx context.Context, pool *pgxpool.Pool, documents 
 	}
 	defer tx.Rollback(ctx)
 
-	// Initialize sqlc Queries and SessionService
+	// Initialize sqlc Queries and Services
 	queries := repository.New(tx)
 	sessionService := services.NewSessionService(queries)
+	recordsService := services.NewRecordsService(queries)
 
 	// Process documents
 	for _, doc := range documents {
@@ -66,29 +67,20 @@ func processAndSaveDocuments(ctx context.Context, pool *pgxpool.Pool, documents 
 			return nil, err
 		}
 
-		// Parse HTML document for speakers
-		speakers, err := parser.ParseSpeakers(doc.HTMLContent)
-		if err != nil {
-			log.Printf("Error parsing speakers for document dated %s: %v", doc.Date, err)
-			return nil, err
-		}
-
 		// Parse HTML document for records and events
-		records, err := parser.ParseRecords(doc.HTMLContent, session.ID)
+		records, err := parser.ParseRecords(doc.HTMLContent)
 		if err != nil {
 			log.Printf("Error parsing records for document dated %s: %v", doc.Date, err)
 			return nil, err
 		}
-		if len(speakers) > 0 {
-			log.Printf("First Speaker: %+v", speakers[0])
-		} else {
-			log.Println("No speakers found.")
-		}
-
-		if len(records) > 0 {
-			log.Printf("First Record: %+v", records[0])
-		} else {
-			log.Println("No records found.")
+		// Save records and their events
+		for _, record := range records {
+			err = recordsService.ProcessAndSaveRecord(ctx, session.ID, record)
+			if err != nil {
+				log.Printf("Error saving record for session %s: %v", session.ID, err)
+				return nil, err
+			}
+			parsedDocuments = append(parsedDocuments, record)
 		}
 
 	}
