@@ -9,4 +9,5 @@ type Document struct {
 	Date         time.Time `json:"date"`
 	DocumentType string    `json:"document_type"`
 	OriginalLink string    `json:"original_link"`
+	HTMLContent  string    `json:"html_content"`
 }

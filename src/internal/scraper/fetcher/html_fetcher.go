@@ -1,59 +1,86 @@
 package fetcher
 
 import (
-	"fmt"
+	"io"
+	"log"
+	"mimir-scrapper/src/pkg/utils"
 	"strings"
 	"time"
 
 	"github.com/gocolly/colly/v2"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 )
 
 func FetchPage(url string) ([]Document, error) {
 	c := colly.NewCollector()
-
 	var documents []Document
 
 	// Parse table rows
 	c.OnHTML("table.PE_zebra > tbody > tr.body", func(e *colly.HTMLElement) {
-		period, _ := e.DOM.Find("td:nth-of-type(1) id_obdobi").Html()
-		meetingText := e.ChildText("td:nth-of-type(2) > a")
-		meeting := 0
-		if meetingText != "" {
-			fmt.Sscanf(meetingText, "%d", &meeting)
-		}
-		document := e.ChildText("td:nth-of-type(6) > div")
-		dateText := e.ChildText("td:nth-of-type(7)")
-		date, _ := time.Parse("02.01.2006", dateText)
-		docType := e.ChildText("td:nth-of-type(8) tdocname")
-		originalLink := e.ChildAttr("td:nth-of-type(11) > a", "href")
-		originalLink = e.Request.AbsoluteURL(originalLink)
-
-		// Append the structured data
-		documents = append(documents, Document{
-			Period:       toInt(period),
-			Meeting:      meeting,
-			Document:     document,
-			Date:         date,
-			DocumentType: docType,
-			OriginalLink: originalLink,
-		})
+		parseTableRow(e, &documents)
 	})
 
 	// Start scraping
-	err := c.Visit(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to visit page: %w", err)
+	if err := c.Visit(url); err != nil {
+		log.Printf("Error visiting URL: %s, Error: %v", url, err)
+		return nil, err
 	}
 
 	return documents, nil
 }
 
-// Helper function to convert string to int with default value 0
-func toInt(value string) int {
-	if value == "" {
-		return 0
+func parseTableRow(e *colly.HTMLElement, documents *[]Document) {
+	period := utils.ToInt(strings.TrimSpace(e.ChildText("td:nth-of-type(1)")))
+	meeting := utils.ToInt(strings.TrimSpace(e.ChildText("td:nth-of-type(2) > a")))
+	document := strings.TrimSpace(e.ChildText("td:nth-of-type(6) div"))
+	date, _ := time.Parse("02.01.2006", strings.TrimSpace(e.ChildText("td:nth-of-type(7)")))
+	docType := strings.TrimSpace(e.ChildText("td:nth-of-type(8)"))
+	originalLink := e.ChildAttr("td:nth-of-type(11) a.icon.iconBefore.html", "href")
+
+	if originalLink != "" {
+		originalLink = e.Request.AbsoluteURL(originalLink)
 	}
-	var result int
-	fmt.Sscanf(strings.TrimSpace(value), "%d", &result)
-	return result
+
+	doc := Document{
+		Period:       period,
+		Meeting:      meeting,
+		Document:     document,
+		Date:         date,
+		DocumentType: docType,
+		OriginalLink: originalLink,
+	}
+
+	// Fetch HTML content
+	if originalLink != "" {
+		htmlContent := fetchHTMLContent(originalLink)
+
+		doc.HTMLContent = htmlContent
+	}
+
+	*documents = append(*documents, doc)
+}
+
+// fetchHTMLContent fetches HTML content for a given URL
+func fetchHTMLContent(url string) string {
+	htmlContent := ""
+	collector := colly.NewCollector()
+
+	collector.OnResponse(func(r *colly.Response) {
+		// Decode windows-1250 content to UTF-8
+		reader := transform.NewReader(strings.NewReader(string(r.Body)), charmap.Windows1250.NewDecoder())
+		decoded, err := io.ReadAll(reader)
+		if err != nil {
+			log.Printf("Error decoding content from URL: %s, Error: %v", url, err)
+			htmlContent = "Error decoding content: " + err.Error()
+			return
+		}
+		htmlContent = string(decoded)
+	})
+
+	if err := collector.Visit(url); err != nil {
+		log.Printf("Error fetching content from URL: %s, Error: %v", url, err)
+		return "Error fetching content: " + err.Error()
+	}
+	return htmlContent
 }

@@ -19,7 +19,7 @@ func NewSessionService(queries *repository.Queries) *SessionService {
 }
 
 // GetOrCreateSession retrieves or creates the necessary session, institution, and occasion.
-func (ss *SessionService) GetOrCreateSession(ctx context.Context, institutionName, occasionName string, session_time time.Time) (*repository.Session, error) {
+func (ss *SessionService) GetOrCreateSession(ctx context.Context, institutionName, occasionName string, sessionTime time.Time) (*repository.Session, error) {
 	// Find or create institution
 	institution, err := ss.Queries.FindInstitutionByName(ctx, institutionName)
 	if err != nil {
@@ -52,7 +52,7 @@ func (ss *SessionService) GetOrCreateSession(ctx context.Context, institutionNam
 	session, err := ss.Queries.InsertSession(ctx, repository.InsertSessionParams{
 		InstitutionID: institution.ID,
 		OccasionID:    occasion.ID,
-		DateTime:      session_time,
+		DateTime:      sessionTime,
 	})
 	if err != nil {
 		return nil, err

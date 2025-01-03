@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"log"
 	"mimir-scrapper/src/internal/scraper/fetcher"
+	"mimir-scrapper/src/internal/scraper/parser"
 	"mimir-scrapper/src/pkg/repository"
 	"mimir-scrapper/src/pkg/services"
-	"mimir-scrapper/src/pkg/utils"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,13 +18,6 @@ func ScrapeHandler(w http.ResponseWriter, r *http.Request, ctx context.Context, 
 		url       = "https://www.senat.cz/xqw/xervlet/pssenat/finddoc?typdok=steno"
 		outputDir = "data/raw_data" // Directory for storing documents
 	)
-
-	// Ensure the output directory exists
-	if err := utils.EnsureDir(outputDir); err != nil {
-		log.Println("Error creating output directory:", err)
-		http.Error(w, "Failed to set up storage", http.StatusInternalServerError)
-		return
-	}
 
 	// Fetch structured documents
 	documents, err := fetcher.FetchPage(url)
@@ -72,7 +65,31 @@ func processAndSaveDocuments(ctx context.Context, pool *pgxpool.Pool, documents 
 			log.Printf("Error creating session: %v", err)
 			return nil, err
 		}
-		log.Printf("Session created with ID: %s", session.ID.String())
+
+		// Parse HTML document for speakers
+		speakers, err := parser.ParseSpeakers(doc.HTMLContent)
+		if err != nil {
+			log.Printf("Error parsing speakers for document dated %s: %v", doc.Date, err)
+			return nil, err
+		}
+
+		// Parse HTML document for records and events
+		records, err := parser.ParseRecords(doc.HTMLContent, session.ID)
+		if err != nil {
+			log.Printf("Error parsing records for document dated %s: %v", doc.Date, err)
+			return nil, err
+		}
+		if len(speakers) > 0 {
+			log.Printf("First Speaker: %+v", speakers[0])
+		} else {
+			log.Println("No speakers found.")
+		}
+
+		if len(records) > 0 {
+			log.Printf("First Record: %+v", records[0])
+		} else {
+			log.Println("No records found.")
+		}
 
 	}
 

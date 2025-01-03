@@ -1,18 +1,20 @@
 package parser
 
-type Transcript struct {
-	Title   string
-	Entries []Entry
-}
+import "github.com/google/uuid"
 
-type Entry struct {
-	Speaker     string
-	SpeakerLink string
-	Text        string
-	Events      []Event
+type Record struct {
+	SessionID      uuid.UUID `json:"session_id"`
+	SpeakerName    string    `json:"string"`
+	Content        string    `json:"content"`
+	Events         []Event   `json:"events"`
+	SequenceNumber int       `json:"sequence_number"`
 }
 
 type Event struct {
-	Description string
-	Link        string
+	Link        string `json:"link"`
+	Description string `json:"description"`
+}
+
+type Speaker struct {
+	Name string `json:"name"`
 }
