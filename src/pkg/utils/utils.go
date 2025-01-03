@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/url"
 	"os"
+	"regexp"
+	"strings"
 )
 
 // EnsureDir creates a directory if it doesn't exist
@@ -46,4 +48,21 @@ func DecodeURL(rawURL string) string {
 		return unescaped
 	}
 	return decoded
+}
+
+// SanitizeFileName sanitizes a string to be safe for use as a filename.
+func SanitizeFileName(name string) string {
+	// Replace invalid characters with underscores
+	re := regexp.MustCompile(`[<>:"/\\|?*\x00-\x1F]`)
+	sanitized := re.ReplaceAllString(name, "_")
+
+	// Trim leading and trailing spaces
+	sanitized = strings.TrimSpace(sanitized)
+
+	// Optionally limit the filename length
+	if len(sanitized) > 255 {
+		sanitized = sanitized[:255]
+	}
+
+	return sanitized
 }

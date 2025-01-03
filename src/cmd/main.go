@@ -24,7 +24,7 @@ func main() {
 	defer pool.Close()
 
 	http.HandleFunc("/scrape", func(w http.ResponseWriter, r *http.Request) {
-		scraper.ScrapeHandler(w, r, pool)
+		scraper.ScrapeHandler(w, r, ctx, pool)
 	})
 
 	fmt.Println("Server is running on port 8080...")

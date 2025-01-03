@@ -1,18 +1,18 @@
 BEGIN;
 
-CREATE TABLE records (
+CREATE TABLE record (
     id UUID PRIMARY KEY,
-    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-    speaker_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+    session_id UUID NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+    speaker_id UUID NOT NULL REFERENCES person(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     events JSONB,
     sequence_number INT NOT NULL
 );
 
-CREATE TABLE events (
+CREATE TABLE event (
     id UUID PRIMARY KEY,
     link TEXT,
-    record_id UUID REFERENCES records(id) ON DELETE CASCADE
+    record_id UUID REFERENCES record(id) ON DELETE CASCADE
 );
 
 COMMIT;

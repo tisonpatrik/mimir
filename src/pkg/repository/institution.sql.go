@@ -9,6 +9,17 @@ import (
 	"context"
 )
 
+const findInstitutionByName = `-- name: FindInstitutionByName :one
+SELECT id, name FROM institution WHERE name = $1
+`
+
+func (q *Queries) FindInstitutionByName(ctx context.Context, name string) (Institution, error) {
+	row := q.db.QueryRow(ctx, findInstitutionByName, name)
+	var i Institution
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const insertInstitution = `-- name: InsertInstitution :one
 
 INSERT INTO institution (id, name)

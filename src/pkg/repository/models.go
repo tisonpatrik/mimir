@@ -5,6 +5,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -40,8 +42,8 @@ type Record struct {
 }
 
 type Session struct {
-	ID            uuid.UUID   `json:"id"`
-	InstitutionID uuid.UUID   `json:"institution_id"`
-	OccasionID    uuid.UUID   `json:"occasion_id"`
-	Time          pgtype.Date `json:"time"`
+	ID            uuid.UUID `json:"id"`
+	InstitutionID uuid.UUID `json:"institution_id"`
+	OccasionID    uuid.UUID `json:"occasion_id"`
+	DateTime      time.Time `json:"date_time"`
 }
